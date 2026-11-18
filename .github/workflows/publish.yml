@@ -1,0 +1,32 @@
+name: Verify and publish filesystem component
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      IMAGE: ghcr.io/kirollos-rezkallah/itmo-component-lab:340116
+    steps:
+      - uses: actions/checkout@v7.0.1
+        with:
+          persist-credentials: false
+      - name: Test filesystem behavior on Linux
+        run: docker run --rm --mount "type=bind,source=$GITHUB_WORKSPACE,target=/app,readonly" --workdir /app node:26-alpine node --test analyze.test.mjs
+      - name: Build and verify the container contract
+        run: python3 verify_container.py
+      - name: Publish the verified image
+        env:
+          GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_REPOSITORY_OWNER" --password-stdin
+          docker tag itmo-fs-local "$IMAGE"
+          docker push "$IMAGE"
