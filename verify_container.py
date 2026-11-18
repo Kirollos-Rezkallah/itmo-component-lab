@@ -21,6 +21,7 @@ def check(directory, expected):
 
 with tempfile.TemporaryDirectory(prefix='itmo-fs-check-') as temporary:
     data = Path(temporary)
+    data.chmod(0o755)
     check(data, '0-0-0')
     (data / 'empty').mkdir()
     check(data, '0-1-0')
