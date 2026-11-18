@@ -30,3 +30,11 @@ jobs:
           printf '%s' "$GHCR_TOKEN" | docker login ghcr.io --username "$GITHUB_REPOSITORY_OWNER" --password-stdin
           docker tag itmo-fs-local "$IMAGE"
           docker push "$IMAGE"
+      - name: Verify anonymous pull and published container
+        run: |
+          docker --config "$(mktemp -d)" pull "$IMAGE"
+          test "$(docker image inspect --format '{{.Os}}/{{.Architecture}}' "$IMAGE")" = "linux/amd64"
+          input=$(mktemp -d)
+          chmod 755 "$input"
+          output=$(docker run --rm --network none --mount "type=bind,source=$input,target=/data,readonly" "$IMAGE")
+          test "$output" = "340116-0-0-0"
