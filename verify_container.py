@@ -14,7 +14,8 @@ def check(directory, expected):
     result = subprocess.run([
         'docker', 'run', '--rm', '--network', 'none',
         '--mount', f'type=bind,source={directory},target=/data,readonly',
-        'itmo-fs-local'], capture_output=True, text=True, check=True)
+        'itmo-fs-local'], capture_output=True, text=True)
+    assert result.returncode == 0, result.stderr
     assert result.stdout == f'{isu}-{expected}\n', result.stdout
     assert result.stderr == '', result.stderr
 
